@@ -2,6 +2,17 @@ AES_BLOCK_SIZE = 16
 from Crypto import Random
 
 
+def determine_padding_and_remove(msg):
+    """
+    Translates the padding bytes in the last block and removes it from
+    plaintext
+    """
+    padded_block = msg[-1]
+    truncate = padded_block[-1]
+    msg[-1] = padded_block[:-truncate]
+    return msg
+
+
 def strxor(a, b):     # xor two strings of different lengths
     if len(a) > len(b):
         return "".join([chr(ord(x) ^ ord(y)) for (x, y) in zip(a[:len(b)], b)])
@@ -23,3 +34,20 @@ def random(size=AES_BLOCK_SIZE):
 def padding(block, size=AES_BLOCK_SIZE):
     pad = bytes([size - len(block)])
     return pad * (size - len(block))
+
+
+def blockify(msg, block_size=AES_BLOCK_SIZE):
+    """
+    Transforms a byte string into a list of blocks of size block_size
+    """
+    blocks = []
+    block = b''
+    for byte in msg:
+        block += bytes([byte])
+        if len(block) % block_size == 0:
+            blocks.append(block)
+            block = b''
+    if len(block) != 0:
+        block += padding(block)
+        blocks.append(block)
+    return blocks

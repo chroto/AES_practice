@@ -2,13 +2,8 @@ from Crypto.Cipher import AES
 AESCipher = AES.AESCipher
 from Crypto.Cipher.AES import AESCipher
 
-from util import random
-from ctr_util import (
-    encrypt_block,
-    decrypt_block,
-    determine_padding_and_remove,
-    blockify
-)
+from util import random, determine_padding_and_remove, blockify
+from ctr_util import encrypt_block, decrypt_block
 
 
 def encrypt(msg, key, iv=random(), cipher_class=AESCipher):
@@ -35,5 +30,4 @@ def decrypt(cipher_text, key, cipher_class=AESCipher):
     msg = []
     for count, c in enumerate(cipher_blocks):
         msg.append(decrypt_block(c, cipher, iv, count))
-
     return b''.join(determine_padding_and_remove(msg))

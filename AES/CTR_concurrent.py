@@ -36,7 +36,6 @@ def decrypt(cipher_text, key, cipher_class=AESCipher):
     cipher = cipher_class(key)
     cipher_blocks = blockify(cipher_text)
     iv = cipher_blocks.pop(0)
-    msg = []
     threads = [
         gevent.spawn(decrypt_block, block, cipher, iv, count) for count, block in enumerate(cipher_blocks)
     ]
