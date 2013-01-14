@@ -1,18 +1,21 @@
 """
 Concurrent implementation of AES in CTR mode
 """
-import gevent
+import multiprocessing
 from Crypto.Cipher import AES
 AESCipher = AES.AESCipher
 from Crypto.Cipher.AES import AESCipher
 
-from util import random
-from ctr_util import (
-    encrypt_block,
-    decrypt_block,
-    determine_padding_and_remove,
-    blockify
-)
+from util import random, determine_padding_and_remove, blockify
+from ctr_util import encrypt_block, decrypt_block
+
+
+def encrypt_worker(queue, *args):
+    queue.put((encrypt_block(*args), args[3],))
+
+
+def decrypt_worker(queue, *args):
+    queue.put((decrypt_block(*args), args[3],))
 
 
 def encrypt(msg, key, iv=random(), cipher_class=AESCipher):
@@ -21,12 +24,24 @@ def encrypt(msg, key, iv=random(), cipher_class=AESCipher):
     """
     cipher = cipher_class(key)
     msg_blocks = blockify(msg)
+    q = multiprocessing.JoinableQueue()
 
-    threads = [
-        gevent.spawn(encrypt_block, m, cipher, iv, count) for count, m in enumerate(msg_blocks)
+    processes = [
+        multiprocessing.Process(
+            target=encrypt_worker,
+            args=(q, m, cipher, iv, count,)
+        ) for count, m in enumerate(msg_blocks)
     ]
-    gevent.joinall(threads)
-    return b''.join([iv] + [x.get() for x in threads])
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
+
+    cipher_blocks = [None] * len(msg_blocks)
+    while not q.empty():
+        res = q.get()
+        cipher_blocks[res[1]] = res[0]
+    return b''.join([iv] + cipher_blocks)
 
 
 def decrypt(cipher_text, key, cipher_class=AESCipher):
@@ -35,11 +50,24 @@ def decrypt(cipher_text, key, cipher_class=AESCipher):
     """
     cipher = cipher_class(key)
     cipher_blocks = blockify(cipher_text)
+    q = multiprocessing.JoinableQueue()
     iv = cipher_blocks.pop(0)
-    threads = [
-        gevent.spawn(decrypt_block, block, cipher, iv, count) for count, block in enumerate(cipher_blocks)
-    ]
-    gevent.joinall(threads)
-    msg = [x.get() for x in threads]
 
-    return b''.join(determine_padding_and_remove(msg))
+    processes = [
+        multiprocessing.Process(
+            target=decrypt_worker,
+            args=(q, b, cipher, iv, count,)
+        ) for count, b in enumerate(cipher_blocks)
+    ]
+
+    for p in processes:
+        p.start()
+    for p in processes:
+        p.join()
+
+    msg = [None] * len(cipher_blocks)
+    while not q.empty():
+        res = q.get()
+        msg[res[1]] = res[0]
+
+    return b''.join(msg)
