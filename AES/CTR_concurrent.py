@@ -23,7 +23,7 @@ def encrypt(msg, key, iv=random(), cipher_class=AESCipher):
     Encrypt a byte string using CTR mode
     """
     cipher = cipher_class(key)
-    msg_blocks = blockify(msg)
+    msg_blocks = blockify(msg, add_padding=True)
     q = multiprocessing.JoinableQueue()
 
     processes = [
@@ -70,4 +70,4 @@ def decrypt(cipher_text, key, cipher_class=AESCipher):
         res = q.get()
         msg[res[1]] = res[0]
 
-    return b''.join(msg)
+    return b''.join(determine_padding_and_remove(msg))

@@ -10,7 +10,7 @@ def encrypt(msg, key, iv=random(), cipher_class=AESCipher):
     Encrypt a byte string using CBC mode
     """
     cipher = cipher_class(key)
-    msg_blocks = blockify(msg)
+    msg_blocks = blockify(msg, add_padding=True)
 
     prev_cipher = iv
     c = []

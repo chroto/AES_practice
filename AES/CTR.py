@@ -11,7 +11,7 @@ def encrypt(msg, key, iv=random(), cipher_class=AESCipher):
     Encrypt a byte string using CTR mode
     """
     cipher = cipher_class(key)
-    msg_blocks = blockify(msg)
+    msg_blocks = blockify(msg, add_padding=True)
 
     c = [iv]
     for count, m in enumerate(msg_blocks):

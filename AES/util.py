@@ -36,18 +36,26 @@ def padding(block, size=AES_BLOCK_SIZE):
     return pad * (size - len(block))
 
 
-def blockify(msg, block_size=AES_BLOCK_SIZE):
+def blockify(msg, add_padding=False, block_size=AES_BLOCK_SIZE):
     """
     Transforms a byte string into a list of blocks of size block_size
     """
+    default_pad = int.to_bytes(block_size, 1, 'big') * block_size
     blocks = []
     block = b''
     for byte in msg:
         block += bytes([byte])
-        if len(block) % block_size == 0:
+        if len(block) == block_size:
             blocks.append(block)
             block = b''
-    if len(block) != 0:
+    if len(block) == 0:
+        if not add_padding:
+            return blocks
+        blocks.append(default_pad)
+        return blocks
+
+    if add_padding:
         block += padding(block)
-        blocks.append(block)
+
+    blocks.append(block)
     return blocks
