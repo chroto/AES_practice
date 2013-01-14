@@ -2,7 +2,7 @@ from Crypto.Cipher import AES
 AESCipher = AES.AESCipher
 from Crypto.Cipher.AES import AESCipher
 
-from util import blockify, random, xor, determine_padding_and_remove
+from .util import blockify, random, xor, determine_padding_and_remove
 
 
 def encrypt(msg, key, iv=random(), cipher_class=AESCipher):

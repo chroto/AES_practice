@@ -2,8 +2,8 @@ from Crypto.Cipher import AES
 AESCipher = AES.AESCipher
 from Crypto.Cipher.AES import AESCipher
 
-from util import random, determine_padding_and_remove, blockify
-from ctr_util import encrypt_block, decrypt_block
+from .util import random, determine_padding_and_remove, blockify
+from .ctr_util import encrypt_block, decrypt_block
 
 
 def encrypt(msg, key, iv=random(), cipher_class=AESCipher):

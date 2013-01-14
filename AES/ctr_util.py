@@ -1,5 +1,5 @@
 import struct
-from util import xor
+from .util import xor
 
 
 def encrypt_block(msg_block, cipher, iv, count):
